@@ -8,9 +8,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import program.dto.AnimalAddDto;
+import program.dto.AnimalDto;
+import program.dto.ImageDto;
 import program.dto.ImageUploadDto;
 import program.entities.Animal;
 import program.entities.ImageEntity;
+import program.mapper.ApplicationMapper;
 import program.repositories.AnimalRepository;
 import program.repositories.ImageRepository;
 import program.storage.StorageService;
@@ -28,13 +31,16 @@ public class AnimalController {
     private final ImageRepository imageRepository;
     private final AnimalRepository animalRepository;
     private final StorageService storageService;
+    private final ApplicationMapper applicationMapper;
 
 @Autowired
-    public AnimalController(ImageRepository imageRepository, AnimalRepository animalRepository, StorageService storageService) {
+    public AnimalController(ImageRepository imageRepository, AnimalRepository animalRepository, StorageService storageService, ApplicationMapper applicationMapper) {
         this.imageRepository = imageRepository;
         this.animalRepository = animalRepository;
         this.storageService = storageService;
+        this.applicationMapper = applicationMapper;
 }
+
 
     // завантажити зображення
     @PostMapping("/upload")
@@ -79,6 +85,25 @@ public class AnimalController {
         }
 
         return ResponseEntity.ok(HttpStatus.OK);
+    }
+    @GetMapping("/")
+    public List<AnimalDto> list(){
+        List<AnimalDto> animalDtos=applicationMapper.ListAnimalByListAnimalDto(animalRepository.findAll());
+        for (AnimalDto animalDto:animalDtos) {
+            List<ImageDto> fileNames= animalDto.getImages();
+            for (ImageDto image:fileNames) {
+                try{
+                    String fileName = image.getName();
+                    String base64 = storageService.loadFile(fileName);
+                    image.setName("data:image/jpeg;base64,"+ base64);
+
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return animalDtos;
     }
 
 }

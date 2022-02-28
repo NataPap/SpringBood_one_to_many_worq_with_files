@@ -1,14 +1,17 @@
 package program.storage;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.apache.commons.io.IOUtils;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -118,5 +121,24 @@ public class FileSystemStorageService implements StorageService {
         } catch (IOException e) {
             throw new StorageException("Could not initialize storage", e);
         }
+    }
+
+    //метод повернення імені файлу
+    @Override
+    public String loadFile(String fileName) throws IOException {
+        try{
+            if(fileName.isEmpty()){
+                throw  new StorageException("Empty file name ");
+            }
+            InputStream iSteamReader = new FileInputStream("./upload-images/"+fileName);
+            byte[] imageBytes = IOUtils.toByteArray(iSteamReader);
+            fileName = Base64.getEncoder().encodeToString(imageBytes);
+
+            return fileName;
+        }
+        catch(IOException e){
+            throw new StorageException("Failed to load file ", e);
+        }
+
     }
 }
